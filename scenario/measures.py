@@ -63,7 +63,6 @@ def waste(c, row, header, *args):
     #     ''')
     waste_series = c.fetchall()
 
-    print('w', waste_series)
     w = [0] * len(nuc_names)
     last = 92 + len(nuc_names)
     for nucid, qty in waste_series:
@@ -98,7 +97,6 @@ class Measures(object):
 
         c.execute('select duration from info');
         duration = c.fetchone()[0]
-        print('duration ', duration)
 
         # c.execute('create table timelist (time integer)')
         # timeline = ",".join([f'({str(i)})' for i in range(duration)])
