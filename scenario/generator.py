@@ -1,16 +1,10 @@
-import sys
 import random
-import argparse
-import csv
-from pathlib import Path
 import xml.etree.ElementTree as ET
-from xml.dom import minidom
 
 from .eg23 import scheduler
 
-from .utils import create_dir
-
-RANDOM_SEED = 0
+# RANDOM_SEED = 0
+RANDOM_SEED = None
 
 VARS = [
     {'name': 'sfr_eff',
@@ -119,7 +113,7 @@ class Generator(object):
             self.demand.append(d)
 
     def init(self):
-        # random.seed(RANDOM_SEED)
+        random.seed(RANDOM_SEED)
         self.header = [var['name'] for var in VARS]
 
         self.spec = Spec()
