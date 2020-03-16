@@ -24,33 +24,23 @@ VARS = [
     #  'range': [0.001, 0.005],
     # },
 
-    # {'name': 'bias',
-    #  'range': [-0.1, 0.1],
-    #
-    #  },
-
     {'name': 'lwr_fr',
-     'irange': [1, 5],
+     'range': [2, 4],
     
      },
 
     {'name': 'fr_fr',
-     'irange': [10, 15],
-    
+     'range': [7, 10],
      },
 
     {'name': 'fr_start',
-     'irange': [20, 40],
+     'irange': [91, 140],
     
      },
 
     {'name': 'lookahead',
-     'irange': [5, 25]}
-
-    # {'name': 'rate',
-    #  'values': [1. + i/100.0 for i in range(1, 4)],
-    #  'values': [1. + i/100.0 for i in range(1, 4)],
-    #  }
+     'irange': [1, 2]
+     }
 ]
 
 
@@ -66,7 +56,7 @@ class Generator(object):
         self.demand = []
         self.header = []
         self.spec = None
-        self.rate = 1.02
+        self.rate = 1.01
         self.init()
 
     @staticmethod
@@ -107,8 +97,8 @@ class Generator(object):
                 setattr(spec, var['name'], value)
 
     def create_demand(self, d, rate, years):
-        self.demand = [2000 * (y//4 + 1) for y in range(20)]
-        for year in range(20, years):
+        self.demand = [d]*56
+        for year in range(56, years+100):
             d = d*rate
             self.demand.append(d)
 
@@ -134,16 +124,19 @@ class Generator(object):
         self.create_demand(self.ns.initial_demand, self.spec.rate, self.spec.years)
         self.spec.demand = self.demand
 
-    def author(self):
+    def author(self, logfile):
         lwr_units = [0] * self.spec.years
         fr_units = [0] * self.spec.years
         self.spec.supply = lwr_units, fr_units
-
+        self.spec.logfile = logfile
         self.select_values(self.spec)
-        schedule = scheduler(self.spec)
+        lwr, fr = scheduler(self.spec)
 
-        deploy = self.scenario.find(".//*[name='{}']/config/DeployInst".format('deploy_inst'))
-        self.set_schedule(deploy, schedule)
+        lwr_deploy = self.scenario.find(".//*[name='{}']/config/DeployInst".format('lwr_inst'))
+        self.set_schedule(lwr_deploy, lwr)
+
+        fr_deploy = self.scenario.find(".//*[name='{}']/config/DeployInst".format('fr_inst'))
+        self.set_schedule(fr_deploy, fr)
 
         return self.scenario, [str(var['value']) for var in VARS]
 

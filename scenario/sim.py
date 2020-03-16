@@ -27,7 +27,7 @@ def parse(args):
 
     p.add_argument('-n', '--samples', default=1, dest='samples', type=int, help='number of scenarios to generate')
 
-    p.add_argument('-d', '--demand', default='10000', type=float, dest='initial_demand', help='initial demand')
+    p.add_argument('-d', '--demand', default='100000', type=float, dest='initial_demand', help='initial demand')
     p.add_argument('-r', '--report', default='params.csv',  dest='report', help='report file')
     ns = p.parse_args(args)
     return ns
@@ -37,8 +37,7 @@ def sim(args=None):
     args = sys.argv[1:] if args is None else args
     ns = parse(args)
     path = Path(ns.output) / str(ns.job)
-    if not path.exists():
-        path.mkdir()
+    path.mkdir(parents=True, exist_ok=True)
 
     generator = Generator(ns)
     measures = Measures(generator.demand)
@@ -57,29 +56,28 @@ def sim(args=None):
 
         # print('\tcreate...', end="")
         t = time.time()
-        scenario, params = generator.author()
+        scenario, params = generator.author(path / f'scheduler_{i}_log.csv')
         save(xml_filename, scenario)
         # print("{:.3f}".format(time.time() - t))
 
         # print('\tcyclus...', end="")
-        t = time.time()
-        subprocess.run(['cyclus', xml_filename, '-o', db], check=True, stdout=log, stderr=log, universal_newlines=True)
-        # print("{:.3f}".format(time.time()-t))
-
-        # print('\tpost...', end="")
         # t = time.time()
-        # subprocess.run(['cyan', '-db', db, 'post'], check=True, stdout=log, stderr=log)
-        # print("{:.3f}".format(time.time()-t))
-
-        # print('\tmeasures...', end="")
-        # t = time.time()
-        values = measures.compute(db)
-        print(f'{ns.job} sim: {i} {time.time()-t:.1f}')
-
-        print(params, values)
-        with open(path / ns.report, 'a') as f:
-            report = csv.writer(f)
-            report.writerow(params + values)
+        # subprocess.run(['cyclus', xml_filename, '-o', db], check=True, stdout=log, stderr=log, universal_newlines=True)
+        # # print("{:.3f}".format(time.time()-t))
+        #
+        # # print('\tpost...', end="")
+        # # t = time.time()
+        # # subprocess.run(['cyan', '-db', db, 'post'], check=True, stdout=log, stderr=log)
+        # # print("{:.3f}".format(time.time()-t))
+        #
+        # # print('\tmeasures...', end="")
+        # # t = time.time()
+        # values = measures.compute(db)
+        # print(f'{ns.job} sim: {i} {time.time()-t:.1f}')
+        #
+        # with open(path / ns.report, 'a') as f:
+        #     report = csv.writer(f)
+        #     report.writerow(params + values)
 
 
 if __name__ == '__main__':
