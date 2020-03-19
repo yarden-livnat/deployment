@@ -4,26 +4,24 @@ nuc_names = ['U', 'Np', 'Pu', 'Am', 'Cm']
 
 
 def total_power(c, row, header):
-    c.execute('''select tl.year, ifnull(p.power, 0) as power from
-                (select distinct (time-1)/12 as year from timelist )as tl
-                left join (
-                    select time/12 as year, sum(value)/12 as power from TimeSeriesPower group by year
-                ) as p on tl.year = p.year''')
+    c.execute(''' select time/12 as year, sum(value)/12 as power from TimeSeriesPower group by year''')
     total = c.fetchone()
     row.append(total[0])
 
 
 def power_ratio(c, row, header, demand):
     c.execute('''select sum(value) 
-                     from TimeSeriesPower, AgentEntry
-                    where TimeSeriesPower.AgentId == AgentEntry.AgentId and AgentEntry.Prototype == "lwr"''')
-    lwr = c.fetchone()[0]
+                   from TimeSeriesPower, AgentEntry
+                   where TimeSeriesPower.AgentId == AgentEntry.AgentId 
+                        and AgentEntry.Prototype == "fr" 
+                        and time > 780
+                    ''')
+    fr = c.fetchone()[0]
 
-
-    c.execute('select sum(value) from TimeSeriesPower')
+    c.execute('''select sum(value) from TimeSeriesPower ''')
     total = c.fetchone()[0]
 
-    row.append(lwr/total)
+    row.append(1-fr/total)
 
 
 def excess(c, row, header, demand):
@@ -70,6 +68,19 @@ def waste(c, row, header, *args):
             w[nucid-92] = qty
     row.extend(w)
 
+import pandas as pd
+
+
+def power_per_year(c):
+    c.execute('''select time/12 as year, sum(value)/12 as power, AgentEntry.Prototype as prototype 
+                from TimeSeriesPower, AgentEntry
+                where TimeSeriesPower.AgentId == AgentEntry.AgentId 
+                group by year, prototype
+                ''')
+    prototype = c.fetchall()
+
+    return prototype
+
 
 MEASURES = [
     # {'measures': 'total_power', 'f': total_power},
@@ -95,15 +106,18 @@ class Measures(object):
         conn = sqlite3.connect(filename)
         c = conn.cursor()
 
-        c.execute('select duration from info');
+        c.execute('select duration from info')
         duration = c.fetchone()[0]
+        c.execute('create table TimeList (time integer)')
+        timeline = ",".join([f'({str(i)})' for i in range(duration)])
+        c.execute(f'insert into TimeList  values {timeline}')
+        conn.commit()
 
-        # c.execute('create table timelist (time integer)')
-        # timeline = ",".join([f'({str(i)})' for i in range(duration)])
-        # c.execute(f'insert into timelist  values {timeline}')
         values = []
         for measure in MEASURES:
             measure['f'](c, values, self.header, self.demand)
 
+        power = power_per_year(c)
         conn.close()
-        return values
+
+        return values, power

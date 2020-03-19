@@ -1,2 +1,5 @@
 simulations/
 data/
+
+__pycache__/*
+*.pyc

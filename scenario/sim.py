@@ -51,33 +51,38 @@ def sim(args=None):
         report.writerow(generator.header + measures.header)
 
     for i in range(ns.samples):
-        # print('sim',i)
+        print(f'sim {ns.job}-{i}')
         os.system('rm -f '+db)
 
         # print('\tcreate...', end="")
-        t = time.time()
+        # t = time.time()
         scenario, params = generator.author(path / f'scheduler_{i}_log.csv')
         save(xml_filename, scenario)
         # print("{:.3f}".format(time.time() - t))
 
         # print('\tcyclus...', end="")
         # t = time.time()
-        # subprocess.run(['cyclus', xml_filename, '-o', db], check=True, stdout=log, stderr=log, universal_newlines=True)
-        # # print("{:.3f}".format(time.time()-t))
+        subprocess.run(['cyclus', xml_filename, '-o', db], check=True, stdout=log, stderr=log, universal_newlines=True)
+        # print("{:.3f}".format(time.time()-t))
         #
         # # print('\tpost...', end="")
         # # t = time.time()
         # # subprocess.run(['cyan', '-db', db, 'post'], check=True, stdout=log, stderr=log)
         # # print("{:.3f}".format(time.time()-t))
         #
-        # # print('\tmeasures...', end="")
-        # # t = time.time()
-        # values = measures.compute(db)
+        # print('\tmeasures...', end="")
+        # t = time.time()
+        values, data = measures.compute(db)
         # print(f'{ns.job} sim: {i} {time.time()-t:.1f}')
-        #
-        # with open(path / ns.report, 'a') as f:
-        #     report = csv.writer(f)
-        #     report.writerow(params + values)
+
+        with open(path / ns.report, 'a') as f:
+            report = csv.writer(f)
+            report.writerow(params + values)
+
+        with open(path / f'power-{i}.csv', 'w') as f:
+            writer = csv.writer(f)
+            writer.writerow(['year', 'power', 'prototype'])
+            writer.writerow(data)
 
 
 if __name__ == '__main__':

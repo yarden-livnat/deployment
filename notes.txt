@@ -1,0 +1,4 @@
+docker run -v $PWD:/local_drive -it cyclus/cyclus-deps:latest
+ conda install cyclus cycamore
+cd /local_drive
+./run.sh
