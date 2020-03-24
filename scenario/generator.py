@@ -7,16 +7,16 @@ from .eg23 import scheduler
 RANDOM_SEED = None
 
 VARS = [
-    {
-        'name': 'sfr_eff',
-        'pattern': ".//*[name='{}']//eff".format('sfr_reprocessing'),
-        'range': [0.99, 0.999]
-    },
-    {
-        'name': 'uox_eff',
-        'pattern': ".//*[name='{}']//eff".format('uox_reprocessing'),
-        'range': [0.99, 0.999]
-    },
+    # {
+    #     'name': 'sfr_eff',
+    #     'pattern': ".//*[name='{}']//eff".format('sfr_reprocessing'),
+    #     'range': [0.99, 0.999]
+    # },
+    # {
+    #     'name': 'uox_eff',
+    #     'pattern': ".//*[name='{}']//eff".format('uox_reprocessing'),
+    #     'range': [0.99, 0.999]
+    # },
     {
         'name': 'breeding',
         'range': [1.02, 1.3]
@@ -24,6 +24,11 @@ VARS = [
     {
         'name': 'bias',
         'range': [0, 0.1]
+    },
+    {
+        'name': 'transition',
+        'pattern': ".//*[name='{}']//build_times/val".format('recycling_inst'),
+        'irange': [50, 100],
     },
     {
         'name': 'fr_start',
@@ -83,8 +88,8 @@ class Generator(object):
             setattr(spec, var['name'], value)
 
     def create_demand(self, d, rate, years):
-        self.demand = [d]*50
-        for year in range(50, years+100):
+        self.demand = [d]*51
+        for year in range(51, years+80):
             d = d*rate
             self.demand.append(d)
 
@@ -93,6 +98,7 @@ class Generator(object):
         reactor = self.scenario.find(".//*[name='{}']".format(name))
         spec['lifetime'] = int(reactor.find('lifetime').text) // 12
         spec['cycle_time'] = int(reactor.find('.//cycle_time').text)
+        spec['refuel_time'] = int(reactor.find('.//refuel_time').text)
         spec['assem_size'] = int(reactor.find('.//assem_size').text)
         spec['n_assem_core'] = int(reactor.find('.//n_assem_core').text)
         spec['n_assem_batch'] = int(reactor.find('.//n_assem_batch').text)
@@ -139,6 +145,9 @@ class Generator(object):
         self.spec.lwr = self.collect('lwr')
         self.spec.fr = self.collect('fr')
 
+        self.spec.sfr_eff = 0.998
+        self.spec.uox_eff = 0.998
+
         self.create_demand(self.ns.initial_demand, self.spec.rate, self.spec.years)
         self.spec.demand = self.demand
 
@@ -184,6 +193,10 @@ class Generator(object):
         fr_deploy = self.scenario.find(".//*[name='{}']/config/DeployInst".format('fr_inst'))
         self.set_schedule(fr_deploy, fr)
 
+        for var in VARS:
+            if var['name'] in ['transition', 'fr_start']:
+                var['value'] += 1950
+        
         return self.scenario, [str(var['value']) for var in VARS]
 
 

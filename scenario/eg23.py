@@ -13,7 +13,7 @@ class Schedule:
         self.kind = kind
 
     def add(self, when, what, num):
-        self.when.append(when)
+        self.when.append(when+1)
         self.what.append(what)
         self.num.append(num)
 
@@ -48,11 +48,16 @@ def scheduler(spec):
     demand = spec.demand
 
     lwr_decommission = [0] * (spec.years * 12)
-    fr_decommission = [0] * (spec.years * 12)
     lwr_cap = spec.lwr['capacity']
-    fr_cap = spec.fr['capacity']
     lwr_lifetime = spec.lwr['lifetime']
+    lwr_production_factor = 1 - spec.lwr['refuel_time']/(spec.lwr['cycle_time'] + spec.lwr['refuel_time'])
+    lwr_cap *= lwr_production_factor  # reduce the estimated production due to refueling
+
+    fr_decommission = [0] * (spec.years * 12)
+    fr_cap = spec.fr['capacity']
     fr_lifetime = spec.fr['lifetime']
+    fr_production_factor = 1 - spec.fr['refuel_time']/(spec.fr['cycle_time'] + spec.fr['refuel_time'])
+    fr_cap *= fr_production_factor  # reduce the estimated production due to refueling
 
     pu = [0]*((spec.years+100)*12)
     pu_stock = 0
@@ -86,13 +91,10 @@ def scheduler(spec):
     n_fr = 0
 
     with open(spec.logfile, 'w') as log:
-        log.write(f'cap: {lwr_cap} {fr_cap}  fr_start: {spec.fr_start} breeding:{spec.breeding} sfr_eff:{spec.sfr_eff} bias {spec.bias}\n')
-
         log.write('year, lwr,  fr, demand,    gap, fwd_gap, pu_stock, support, b_lwr, b_fr\n')
         for month in range(50*12, spec.years*12):
             # account for pu produced and consumed this month
             pu_stock += pu[month]
-            # print(f'{month//12}/{month%12} new pu: {pu[month]:.0f}')
 
             # building new reactors can happen only once a year
             if month % 12 != 0:
@@ -112,12 +114,12 @@ def scheduler(spec):
             build_lwr = 0
 
             gap_ratio = capacity / demand[year]
-            fwd_gap = demand[year]*(1+spec.bias) - capacity
-            if gap_ratio < (1 - spec.bias):
+            gap = demand[year]*(1+spec.bias) - capacity
+            if gap_ratio < (1 - spec.bias) or fr_decommission[year] > 0:
                 if year >= spec.fr_start:
-                    need = ceil(fwd_gap/fr_cap)
+                    need = ceil(gap/fr_cap)
                     build_fr = min(need, can_build)
-                build_lwr = max(ceil((fwd_gap - build_fr * fr_cap) / lwr_cap), 0)
+                build_lwr = max(ceil((gap - build_fr * fr_cap) / lwr_cap), 0)
 
             if build_lwr > 0 and year + lwr_lifetime < spec.years:
                 lwr_decommission[year + lwr_lifetime] = build_lwr
@@ -128,7 +130,7 @@ def scheduler(spec):
             if year == spec.fr_start:
                 log.write('----fr available------------------\n')
 
-            log.write(f'{year:3}, {n_lwr:3}, {n_fr:4}, {demand[year]:6.0f}, {demand[year]-capacity:6.0f}, {fwd_gap:6.0f}'
+            log.write(f'{year:3}, {n_lwr:3}, {n_fr:4}, {demand[year]:6.0f}, {demand[year]-capacity:6.0f}, {gap:6.0f}'
                       f'{pu_stock:7.0f} {can_build:8}, {build_lwr:4}, {build_fr:4}\n')
 
             if build_lwr > 0:

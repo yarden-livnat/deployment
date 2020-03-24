@@ -56,7 +56,7 @@ def sim(args=None):
 
         # print('\tcreate...', end="")
         # t = time.time()
-        scenario, params = generator.author(path / f'scheduler_{i}_log.csv')
+        scenario, params = generator.author(path / f'schedule_{i}.csv')
         save(xml_filename, scenario)
         # print("{:.3f}".format(time.time() - t))
 
@@ -82,7 +82,8 @@ def sim(args=None):
         with open(path / f'power-{i}.csv', 'w') as f:
             writer = csv.writer(f)
             writer.writerow(['year', 'power', 'prototype'])
-            writer.writerow(data)
+            for row in data:
+                writer.writerow(row)
 
 
 if __name__ == '__main__':
