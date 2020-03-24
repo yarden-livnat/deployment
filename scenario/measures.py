@@ -43,8 +43,8 @@ def pu_to_power(c, row, header, demand):
 
     ratios = pu.div(power['power'], axis=0)
 
-    row.append(ratios.max().values)
-    row.append(ratios.mean().values)
+    row.append(ratios.max().values[0])
+    row.append(ratios.mean().values[0])
 
 
 # def excess(c, row, header, demand):
