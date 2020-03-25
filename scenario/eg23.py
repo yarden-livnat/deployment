@@ -69,7 +69,7 @@ def scheduler(spec):
     fr_produces = spec.fr['assem_size'] * spec.fr['pu_out'] * spec.sfr_eff
 
     start_year = 1950
-    transition_year = 2015 - 1950
+    transition_year = spec.transition
     delay = 1 + 36 + 1 + 1 + 1
     # delays:
     #    1 to pool

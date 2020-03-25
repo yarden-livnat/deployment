@@ -27,7 +27,6 @@ VARS = [
     },
     {
         'name': 'transition',
-        'pattern': ".//*[name='{}']//build_times/val".format('recycling_inst'),
         'irange': [50, 80],
     },
     {
@@ -184,6 +183,10 @@ class Generator(object):
         self.spec.logfile = logfile
         self.select_values(self.spec)
         self.adapt_sfr_waste_pu()
+
+        nodes = self.scenario.findall(".//*[name='{}']//build_times/val".format('recycling_inst'))
+        for node in nodes:
+            node.text = str(self.spec.transition*12)
 
         lwr, fr = scheduler(self.spec)
 
