@@ -101,8 +101,8 @@ def scheduler(spec):
                 continue
 
             year = month // 12
-            if year == transition_year:
-                log.write('--- transition year --------\n')
+            # if year == transition_year:
+            #     log.write('--- transition year --------\n')
 
             n_lwr -= lwr_decommission[year]
             n_fr -= fr_decommission[year]
@@ -127,8 +127,8 @@ def scheduler(spec):
             if build_fr > 0 and year + fr_lifetime < spec.years:
                 fr_decommission[year + fr_lifetime] = build_fr
 
-            if year == spec.fr_start:
-                log.write('----fr available------------------\n')
+            # if year == spec.fr_start:
+            #     log.write('----fr available------------------\n')
 
             log.write(f'{year:3}, {n_lwr:3}, {n_fr:4}, {demand[year]:6.0f}, {demand[year]-capacity:6.0f}, {gap:6.0f}'
                       f'{pu_stock:7.0f} {can_build:8}, {build_lwr:4}, {build_fr:4}\n')
