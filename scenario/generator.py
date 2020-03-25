@@ -28,7 +28,7 @@ VARS = [
     {
         'name': 'transition',
         'pattern': ".//*[name='{}']//build_times/val".format('recycling_inst'),
-        'irange': [50, 100],
+        'irange': [50, 80],
     },
     {
         'name': 'fr_start',
@@ -196,7 +196,7 @@ class Generator(object):
         for var in VARS:
             if var['name'] in ['transition', 'fr_start']:
                 var['value'] += 1950
-        
+
         return self.scenario, [str(var['value']) for var in VARS]
 
 

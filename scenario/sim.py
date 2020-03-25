@@ -60,20 +60,18 @@ def sim(args=None):
         save(xml_filename, scenario)
         # print("{:.3f}".format(time.time() - t))
 
-        # print('\tcyclus...', end="")
-        # t = time.time()
+        with open(str(path / 'sim.log'), 'a') as sim_log:
+            sim_log.write(f'sim {ns.job}-{i}: {",".join([str(p) for p in params])}\n')
+
+        print('\tcyclus...', end="")
+        t = time.time()
         subprocess.run(['cyclus', xml_filename, '-o', db], check=True, stdout=log, stderr=log, universal_newlines=True)
-        # print("{:.3f}".format(time.time()-t))
-        #
-        # # print('\tpost...', end="")
-        # # t = time.time()
-        # # subprocess.run(['cyan', '-db', db, 'post'], check=True, stdout=log, stderr=log)
-        # # print("{:.3f}".format(time.time()-t))
-        #
-        # print('\tmeasures...', end="")
-        # t = time.time()
+        print("{:.3f}".format(time.time()-t))
+
+        print('\tmeasures...', end="")
+        t = time.time()
         values, data = measures.compute(db)
-        # print(f'{ns.job} sim: {i} {time.time()-t:.1f}')
+        print(f'{ns.job} sim: {i} {time.time()-t:.1f}')
 
         with open(path / ns.report, 'a') as f:
             report = csv.writer(f)
